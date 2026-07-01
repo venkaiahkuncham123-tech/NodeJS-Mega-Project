@@ -1,0 +1,33 @@
+name:  node application
+on: 
+  push:
+    branches: [ "main" , "master"]
+jobs:
+  cloning-repo:
+    runs-on: self-hosted
+    env:
+      DB_HOST: ${{secrets.DB_HOST}}
+      DB_NAME: ${{secrets.DB_NAME}}
+      DB_PASSWORD: ${{secrets.DB_PASSWORD}}
+      DB_USER: ${{DB_USER}}
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v7
+      - name: changing frontend
+        working-directory: ./api
+        run: npm ci install
+      - name: starting project
+        run: npm start
+  cloning-repo-starting-frontend:
+    runs-on: self-hosted
+    needs: cloning-repo
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v7
+      - name: changing directory
+        working-directory: ./client
+        run: npm install
+      - name: executing test cases
+        run: npm test
+      - name: starting the project
+        run: npm start
