@@ -17,6 +17,7 @@ jobs:
         working-directory: ./api
         run: npm ci install
       - name: starting project
+        working-directory: ./api
         run: npm start
   cloning-repo-starting-frontend:
     runs-on: self-hosted
@@ -28,6 +29,8 @@ jobs:
         working-directory: ./client
         run: npm install
       - name: executing test cases
+        working-directory: ./client
         run: npm test
       - name: starting the project
+        working-directory: ./client
         run: npm start
