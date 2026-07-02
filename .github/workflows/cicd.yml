@@ -1,7 +1,10 @@
 name:  node application
 on: 
   push:
-    branches: [ "main" , "master"]
+    branches: 
+      - main  
+      - master
+  workflow-dispatch:  
   env:
     DB_HOST: ${{secrets.DB_HOST}}
     DB_NAME: ${{secrets.DB_NAME}}
