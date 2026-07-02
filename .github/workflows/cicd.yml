@@ -2,14 +2,49 @@ name:  node application
 on: 
   push:
     branches: [ "main" , "master"]
+  env:
+    DB_HOST: ${{secrets.DB_HOST}}
+    DB_NAME: ${{secrets.DB_NAME}}
+    DB_PASSWORD: ${{secrets.DB_PASSWORD}}
+    DB_USER: ${{secrets.DB_USER}}
 jobs:
-  cloning-repo:
+  cloning-repo-and-gitleaks:
     runs-on: self-hosted
-    env:
-      DB_HOST: ${{secrets.DB_HOST}}
-      DB_NAME: ${{secrets.DB_NAME}}
-      DB_PASSWORD: ${{secrets.DB_PASSWORD}}
-      DB_USER: ${{secrets.DB_USER}}
+
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v7
+      - name: gitleaks installation
+        uses: gitleaks/gitleaks-action@v3
+      - name: git leaks scan
+        run: gitleaks detect --report-path output.json
+  dependency-scan-trivy:
+    runs-on: self-hosted
+    needs: cloning-repo-and-gitleaks
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v7
+      - name: trivy instalation
+        working-directory: ./
+        run: |
+          sudo apt-get install wget gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -y
+          sudo apt-get install trivy -y  
+
+      - name: trvy dependency scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          output: trivy-report.json
+          format: json
+          scan-ref: .
+          exit-code: 0
+
+  building_and_staring_backend:
+    runs-on: self-hosted
+    needs: dependency-scan-trivy:
     steps:
       - name: git checkout
         uses: actions/checkout@v7
@@ -21,13 +56,13 @@ jobs:
         run: npm start
   cloning-repo-starting-frontend:
     runs-on: self-hosted
-    needs: cloning-repo
+    needs: 
     steps:
       - name: git checkout
         uses: actions/checkout@v7
       - name: changing directory
         working-directory: ./client
-        run: npm install
+        run: npm ci install
       - name: executing test cases
         working-directory: ./client
         run: npm test
