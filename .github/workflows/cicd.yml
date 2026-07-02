@@ -47,7 +47,7 @@ jobs:
 
   building_and_staring_backend:
     runs-on: self-hosted
-    needs: dependency-scan-trivy:
+    needs: dependency-scan-trivy
     steps:
       - name: git checkout
         uses: actions/checkout@v7
