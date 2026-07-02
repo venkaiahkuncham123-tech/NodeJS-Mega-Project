@@ -59,7 +59,7 @@ jobs:
         run: npm start
   cloning-repo-starting-frontend:
     runs-on: self-hosted
-    needs: building_and_staring_backend
+    
     steps:
       - name: git checkout
         uses: actions/checkout@v7
